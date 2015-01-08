@@ -10,17 +10,12 @@ type PFS struct {
 	// listeners are listener functions.
 	listeners []reflect.Value
 	lmu       *sync.RWMutex
-
-	filters []reflect.Value
-	fmu     *sync.RWMutex
 }
 
 func New() *PFS {
 	return &PFS{
 		listeners: make([]reflect.Value, 0),
 		lmu:       &sync.RWMutex{},
-		filters:   make([]reflect.Value, 0),
-		fmu:       &sync.RWMutex{},
 	}
 }
 
@@ -31,10 +26,6 @@ func (p *PFS) Pub(args ...interface{}) bool {
 	arguments := make([]reflect.Value, 0, len(args))
 	for _, v := range args {
 		arguments = append(arguments, reflect.ValueOf(v))
-	}
-
-	if !p.filtering(arguments) {
-		return false
 	}
 
 	wg := sync.WaitGroup{}
@@ -67,19 +58,6 @@ func (p *PFS) Off() {
 
 }
 
-func (p *PFS) Filter(f interface{}) error {
-	fn, err := p.checkFuncSignature(f)
-	if err != nil {
-		return err
-	}
-
-	p.fmu.Lock()
-	defer p.fmu.Unlock()
-	p.filters = append(p.filters, *fn)
-
-	return nil
-}
-
 func (p *PFS) checkFuncSignature(f interface{}) (*reflect.Value, error) {
 	fn := reflect.ValueOf(f)
 	if fn.Kind() != reflect.Func {
@@ -92,25 +70,5 @@ func (p *PFS) checkFuncSignature(f interface{}) (*reflect.Value, error) {
 		// TODO: check fn arguments
 	}
 
-	p.fmu.RLock()
-	defer p.fmu.RUnlock()
-	if len(p.filters) != 0 {
-		// TODO: check fn arguments
-	}
-
 	return &fn, nil
-}
-
-func (p *PFS) filtering(arguments []reflect.Value) bool {
-	p.fmu.RLock()
-	defer p.fmu.RUnlock()
-
-	for _, fn := range p.filters {
-		res := fn.Call(arguments)
-		ok := res[0].Bool()
-		if !ok {
-			return false
-		}
-	}
-	return true
 }
