@@ -51,26 +51,15 @@ func (p *PFS) Pub(args ...interface{}) bool {
 }
 
 func (p *PFS) Sub(f interface{}) error {
+	fn, err := p.checkFuncSignature(f)
+	if err != nil {
+		return err
+	}
+
 	p.lmu.Lock()
 	defer p.lmu.Unlock()
+	p.listeners = append(p.listeners, *fn)
 
-	fn := reflect.ValueOf(f)
-
-	if reflect.Func != fn.Kind() {
-		return fmt.Errorf("Argument should be a function")
-	}
-
-	if len(p.listeners) != 0 {
-		// TODO: check fn arguments
-	}
-
-	p.fmu.RLock()
-	if len(p.filters) != 0 {
-		// TODO: check fn arguments
-	}
-	p.fmu.RUnlock()
-
-	p.listeners = append(p.listeners, fn)
 	return nil
 }
 
@@ -79,29 +68,37 @@ func (p *PFS) Off() {
 }
 
 func (p *PFS) Filter(f interface{}) error {
+	fn, err := p.checkFuncSignature(f)
+	if err != nil {
+		return err
+	}
+
 	p.fmu.Lock()
 	defer p.fmu.Unlock()
+	p.filters = append(p.filters, *fn)
 
-	// TODO: DRY
+	return nil
+}
+
+func (p *PFS) checkFuncSignature(f interface{}) (*reflect.Value, error) {
 	fn := reflect.ValueOf(f)
-
-	if reflect.Func != fn.Kind() {
-		return fmt.Errorf("Argument should be a function")
+	if fn.Kind() != reflect.Func {
+		return nil, fmt.Errorf("Argument should be a function")
 	}
 
 	p.lmu.RLock()
+	defer p.lmu.RUnlock()
 	if len(p.listeners) != 0 {
 		// TODO: check fn arguments
 	}
-	p.lmu.RUnlock()
 
+	p.fmu.RLock()
+	defer p.fmu.RUnlock()
 	if len(p.filters) != 0 {
 		// TODO: check fn arguments
 	}
 
-	p.filters = append(p.filters, fn)
-
-	return nil
+	return &fn, nil
 }
 
 func (p *PFS) filtering(arguments []reflect.Value) bool {
