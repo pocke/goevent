@@ -49,19 +49,25 @@ func TestFilter(t *testing.T) {
 	}
 
 	err = p.Filter(func(j int) bool {
-		return j == 3
+		return j != 3
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	p.Pub(2)
+	ok := p.Pub(2)
 	if i != 3 {
 		t.Errorf("Expected i == 3, Got i == %d", i)
 	}
+	if !ok {
+		t.Error("should return true When not reject. But got false.")
+	}
 
-	p.Pub(3)
+	ok = p.Pub(3)
 	if i != 3 {
 		t.Errorf("Expected i == 3, Got i == %d", i)
+	}
+	if ok {
+		t.Error("should return false When reject. But got true.")
 	}
 }

@@ -24,7 +24,7 @@ func New() *PFS {
 	}
 }
 
-func (p *PFS) Pub(args ...interface{}) {
+func (p *PFS) Pub(args ...interface{}) bool {
 	p.lmu.Lock()
 	defer p.lmu.Unlock()
 
@@ -33,8 +33,11 @@ func (p *PFS) Pub(args ...interface{}) {
 		arguments = append(arguments, reflect.ValueOf(v))
 	}
 
-	wg := sync.WaitGroup{}
+	if !p.filtering(arguments) {
+		return false
+	}
 
+	wg := sync.WaitGroup{}
 	wg.Add(len(p.listeners))
 	for _, fn := range p.listeners {
 		go func(f reflect.Value) {
@@ -44,6 +47,7 @@ func (p *PFS) Pub(args ...interface{}) {
 	}
 
 	wg.Wait()
+	return true
 }
 
 func (p *PFS) Sub(f interface{}) error {
@@ -98,4 +102,18 @@ func (p *PFS) Filter(f interface{}) error {
 	p.filters = append(p.filters, fn)
 
 	return nil
+}
+
+func (p *PFS) filtering(arguments []reflect.Value) bool {
+	p.fmu.RLock()
+	defer p.fmu.RUnlock()
+
+	for _, fn := range p.filters {
+		res := fn.Call(arguments)
+		ok := res[0].Bool()
+		if !ok {
+			return false
+		}
+	}
+	return true
 }
