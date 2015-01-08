@@ -1,6 +1,7 @@
 package pfs_test
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/pocke/pfs"
@@ -22,10 +23,45 @@ func TestPubSub(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	p.Pub(2)
-
+	ok := p.Pub(2)
 	if i != 3 {
 		t.Errorf("Expected i == 3, Got i == %d", i)
+	}
+	if !ok {
+		t.Error("should return true When not reject. But got false.")
+	}
+}
+
+func TestManyPub(t *testing.T) {
+	p := pfs.New()
+	i := 0
+	p.Sub(func(j int) {
+		i += j
+	})
+
+	for j := 0; j < 1000; j++ {
+		p.Pub(1)
+	}
+
+	if i != 1000 {
+		t.Errorf("i should be 1000, but got %d", i)
+	}
+}
+
+func TestManySub(t *testing.T) {
+	p := pfs.New()
+	i := 0
+	m := sync.Mutex{}
+	for j := 0; j < 1000; j++ {
+		p.Sub(func(j int) {
+			m.Lock()
+			defer m.Unlock()
+			i += j
+		})
+	}
+	p.Pub(1)
+	if i != 1000 {
+		t.Errorf("i should be 1000, but got %d", i)
 	}
 }
 
@@ -69,5 +105,13 @@ func TestFilter(t *testing.T) {
 	}
 	if ok {
 		t.Error("should return false When reject. But got true.")
+	}
+}
+
+func TestFilterWhenNotFunction(t *testing.T) {
+	pfs := pfs.New()
+	err := pfs.Filter("foobar")
+	if err == nil {
+		t.Error("should return error When recieve not function. But got nil.")
 	}
 }
