@@ -60,6 +60,12 @@ func (p *PFS) Sub(f interface{}) error {
 		// TODO: check fn arguments
 	}
 
+	p.fmu.RLock()
+	if len(p.filters) != 0 {
+		// TODO: check fn arguments
+	}
+	p.fmu.RUnlock()
+
 	p.listeners = append(p.listeners, fn)
 	return nil
 }
@@ -69,6 +75,27 @@ func (p *PFS) Off() {
 }
 
 func (p *PFS) Filter(f interface{}) error {
+	p.fmu.Lock()
+	defer p.fmu.Unlock()
+
+	// TODO: DRY
+	fn := reflect.ValueOf(f)
+
+	if reflect.Func != fn.Kind() {
+		return fmt.Errorf("Argument should be a function")
+	}
+
+	p.lmu.RLock()
+	if len(p.listeners) != 0 {
+		// TODO: check fn arguments
+	}
+	p.lmu.RUnlock()
+
+	if len(p.filters) != 0 {
+		// TODO: check fn arguments
+	}
+
+	p.filters = append(p.filters, fn)
 
 	return nil
 }
