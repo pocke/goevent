@@ -7,21 +7,26 @@ import (
 )
 
 type PFS struct {
-	// funcs are listener functions.
-	funcs []reflect.Value
-	mu    *sync.RWMutex
+	// listeners are listener functions.
+	listeners []reflect.Value
+	lmu       *sync.RWMutex
+
+	filters []reflect.Value
+	fmu     *sync.RWMutex
 }
 
 func New() *PFS {
 	return &PFS{
-		funcs: make([]reflect.Value, 0),
-		mu:    &sync.RWMutex{},
+		listeners: make([]reflect.Value, 0),
+		lmu:       &sync.RWMutex{},
+		filters:   make([]reflect.Value, 0),
+		fmu:       &sync.RWMutex{},
 	}
 }
 
 func (p *PFS) Pub(args ...interface{}) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
+	p.lmu.Lock()
+	defer p.lmu.Unlock()
 
 	arguments := make([]reflect.Value, 0, len(args))
 	for _, v := range args {
@@ -30,8 +35,8 @@ func (p *PFS) Pub(args ...interface{}) {
 
 	wg := sync.WaitGroup{}
 
-	wg.Add(len(p.funcs))
-	for _, fn := range p.funcs {
+	wg.Add(len(p.listeners))
+	for _, fn := range p.listeners {
 		go func(f reflect.Value) {
 			defer wg.Done()
 			f.Call(arguments)
@@ -42,8 +47,8 @@ func (p *PFS) Pub(args ...interface{}) {
 }
 
 func (p *PFS) Sub(f interface{}) error {
-	p.mu.Lock()
-	defer p.mu.Unlock()
+	p.lmu.Lock()
+	defer p.lmu.Unlock()
 
 	fn := reflect.ValueOf(f)
 
@@ -51,11 +56,11 @@ func (p *PFS) Sub(f interface{}) error {
 		return fmt.Errorf("Argument should be a function")
 	}
 
-	if len(p.funcs) != 0 {
+	if len(p.listeners) != 0 {
 		// TODO: check fn arguments
 	}
 
-	p.funcs = append(p.funcs, fn)
+	p.listeners = append(p.listeners, fn)
 	return nil
 }
 
@@ -63,6 +68,7 @@ func (p *PFS) Off() {
 
 }
 
-func (p *PFS) Filter(func() bool) {
+func (p *PFS) Filter(f interface{}) error {
 
+	return nil
 }
