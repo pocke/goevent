@@ -35,3 +35,18 @@ func TestTableTriggerFail(t *testing.T) {
 		t.Error("should return error when event has not been defined yet. But got nil")
 	}
 }
+
+func TestTableOff(t *testing.T) {
+	ta := goevent.NewTable()
+	ta.Off("foo", func() {})
+
+	i := 0
+	f := func() { i++ }
+	ta.On("foo", f)
+	ta.Trigger("foo")
+	ta.Off("foo", f)
+	ta.Trigger("foo")
+	if i != 1 {
+		t.Errorf("i expected 1, but got %d", i)
+	}
+}

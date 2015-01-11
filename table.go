@@ -8,6 +8,7 @@ import (
 type Table interface {
 	On(string, interface{}) error
 	Trigger(string, ...interface{}) error
+	Off(string, interface{})
 }
 
 type table struct {
@@ -43,6 +44,18 @@ func (t *table) On(name string, f interface{}) error {
 		t.events[name] = ev
 	}
 	return ev.On(f)
+}
+
+// XXX: return error?
+func (t *table) Off(name string, f interface{}) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	e, ok := t.events[name]
+	if !ok {
+		return
+	}
+	e.Off(f)
 }
 
 var _ Table = &table{}
