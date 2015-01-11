@@ -9,14 +9,14 @@ import (
 type PFS struct {
 	// listeners are listener functions.
 	listeners []reflect.Value
-	lmu       *sync.RWMutex
+	lmu       sync.RWMutex
+
+	argTypes []reflect.Type
+	tmu      sync.RWMutex
 }
 
 func New() *PFS {
-	return &PFS{
-		listeners: make([]reflect.Value, 0),
-		lmu:       &sync.RWMutex{},
-	}
+	return &PFS{}
 }
 
 func (p *PFS) Pub(args ...interface{}) bool {
@@ -64,11 +64,40 @@ func (p *PFS) checkFuncSignature(f interface{}) (*reflect.Value, error) {
 		return nil, fmt.Errorf("Argument should be a function")
 	}
 
+	types := fnArgTypes(fn)
+
 	p.lmu.RLock()
 	defer p.lmu.RUnlock()
-	if len(p.listeners) != 0 {
-		// TODO: check fn arguments
+	if len(p.listeners) == 0 {
+		p.tmu.Lock()
+		defer p.tmu.Unlock()
+		p.argTypes = types
+		return &fn, nil
+	}
+
+	p.tmu.RLock()
+	defer p.tmu.RUnlock()
+	if len(types) != len(p.argTypes) {
+		return nil, fmt.Errorf("Argument length expected %d, but got %d", len(p.argTypes), len(types))
+	}
+	for i, t := range types {
+		if t != p.argTypes[i] {
+			return nil, fmt.Errorf("Argument Error. Args[%d] expected %s, but got %s", i, p.argTypes[i], t)
+		}
 	}
 
 	return &fn, nil
+}
+
+func fnArgTypes(fn reflect.Value) []reflect.Type {
+	fnType := fn.Type()
+	fnNum := fnType.NumIn()
+
+	types := make([]reflect.Type, 0, fnNum)
+
+	for i := 0; i < fnNum; i++ {
+		types = append(types, fnType.In(i))
+	}
+
+	return types
 }

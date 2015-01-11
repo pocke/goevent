@@ -66,9 +66,24 @@ func TestManySub(t *testing.T) {
 }
 
 func TestSubWhenNotFunction(t *testing.T) {
-	pfs := pfs.New()
-	err := pfs.Sub("foobar")
+	p := pfs.New()
+	err := p.Sub("foobar")
 	if err == nil {
 		t.Error("should return error When recieve not function. But got nil.")
+	}
+}
+
+func TestSubWhenInvalidArgs(t *testing.T) {
+	p := pfs.New()
+	p.Sub(func(i int) {})
+
+	err := p.Sub(func() {})
+	if err == nil {
+		t.Error("Should return error when different argument num. But got nil")
+	}
+
+	err = p.Sub(func(s string) {})
+	if err == nil {
+		t.Error("Should return error when different args type. But got nil")
 	}
 }
