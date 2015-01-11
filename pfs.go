@@ -55,7 +55,7 @@ func (p *PFS) Sub(f interface{}) error {
 }
 
 func (p *PFS) Off() {
-
+	panic(fmt.Errorf("Off() has not been implemented yet."))
 }
 
 func (p *PFS) checkFuncSignature(f interface{}) (*reflect.Value, error) {
