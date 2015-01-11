@@ -19,13 +19,20 @@ func New() *PFS {
 	return &PFS{}
 }
 
-func (p *PFS) Pub(args ...interface{}) bool {
+func (p *PFS) Pub(args ...interface{}) error {
 	p.lmu.Lock()
 	defer p.lmu.Unlock()
 
 	arguments := make([]reflect.Value, 0, len(args))
+	argTypes := make([]reflect.Type, 0, len(args))
 	for _, v := range args {
 		arguments = append(arguments, reflect.ValueOf(v))
+		argTypes = append(argTypes, reflect.TypeOf(v))
+	}
+
+	err := p.validateArgs(argTypes)
+	if err != nil {
+		return err
 	}
 
 	wg := sync.WaitGroup{}
@@ -38,7 +45,7 @@ func (p *PFS) Pub(args ...interface{}) bool {
 	}
 
 	wg.Wait()
-	return true
+	return nil
 }
 
 func (p *PFS) Sub(f interface{}) error {
@@ -75,18 +82,27 @@ func (p *PFS) checkFuncSignature(f interface{}) (*reflect.Value, error) {
 		return &fn, nil
 	}
 
-	p.tmu.RLock()
-	defer p.tmu.RUnlock()
-	if len(types) != len(p.argTypes) {
-		return nil, fmt.Errorf("Argument length expected %d, but got %d", len(p.argTypes), len(types))
-	}
-	for i, t := range types {
-		if t != p.argTypes[i] {
-			return nil, fmt.Errorf("Argument Error. Args[%d] expected %s, but got %s", i, p.argTypes[i], t)
-		}
+	err := p.validateArgs(types)
+	if err != nil {
+		return nil, err
 	}
 
 	return &fn, nil
+}
+
+func (p *PFS) validateArgs(types []reflect.Type) error {
+	p.tmu.RLock()
+	defer p.tmu.RUnlock()
+	if len(types) != len(p.argTypes) {
+		return fmt.Errorf("Argument length expected %d, but got %d", len(p.argTypes), len(types))
+	}
+	for i, t := range types {
+		if t != p.argTypes[i] {
+			return fmt.Errorf("Argument Error. Args[%d] expected %s, but got %s", i, p.argTypes[i], t)
+		}
+	}
+
+	return nil
 }
 
 func fnArgTypes(fn reflect.Value) []reflect.Type {

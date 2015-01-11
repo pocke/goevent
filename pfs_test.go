@@ -23,12 +23,17 @@ func TestPubSub(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ok := p.Pub(2)
+	err = p.Pub(2)
 	if i != 3 {
 		t.Errorf("Expected i == 3, Got i == %d", i)
 	}
-	if !ok {
-		t.Error("should return true When not reject. But got false.")
+	if err != nil {
+		t.Error("should not return error When not reject. But got %s.", err)
+	}
+
+	err = p.Pub("2")
+	if err == nil {
+		t.Error("should return error when invalid type. But got nil")
 	}
 }
 
