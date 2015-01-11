@@ -92,3 +92,38 @@ func TestOnWhenInvalidArgs(t *testing.T) {
 		t.Error("Should return error when different args type. But got nil")
 	}
 }
+
+func TestOff(t *testing.T) {
+	p := goevent.New()
+	i := 0
+	j := 0
+	k := 0
+
+	p.On(func() { j++ })
+	f := func() { i++ }
+	p.On(f)
+	p.On(func() { k++ })
+
+	p.Trigger()
+	if i != 1 {
+		t.Errorf("i expected 1, but got %d", i)
+	}
+	if j != 1 {
+		t.Errorf("j expected 1, but got %d", j)
+	}
+	if k != 1 {
+		t.Errorf("k expected 1, but got %d", k)
+	}
+
+	p.Off(f)
+	p.Trigger()
+	if i != 1 {
+		t.Errorf("i expected 1, but got %d", i)
+	}
+	if j != 2 {
+		t.Errorf("j expected 2, but got %d", j)
+	}
+	if k != 2 {
+		t.Errorf("k expected 2, but got %d", k)
+	}
+}

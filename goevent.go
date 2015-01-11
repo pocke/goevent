@@ -61,8 +61,19 @@ func (p *Event) On(f interface{}) error {
 	return nil
 }
 
-func (p *Event) Off() {
-	panic(fmt.Errorf("Off() has not been implemented yet."))
+func (p *Event) Off(f interface{}) {
+	fn := reflect.ValueOf(f)
+
+	p.lmu.Lock()
+	defer p.lmu.Unlock()
+	l := len(p.listeners)
+	for i := 0; i < l; i++ {
+		if fn == p.listeners[i] {
+			p.listeners = append(p.listeners[:i], p.listeners[i+1:]...)
+			l--
+			i--
+		}
+	}
 }
 
 func (p *Event) checkFuncSignature(f interface{}) (*reflect.Value, error) {
