@@ -1,4 +1,4 @@
-package pfs
+package goevent
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-type PFS struct {
+type Event struct {
 	// listeners are listener functions.
 	listeners []reflect.Value
 	lmu       sync.RWMutex
@@ -15,11 +15,11 @@ type PFS struct {
 	tmu      sync.RWMutex
 }
 
-func New() *PFS {
-	return &PFS{}
+func New() *Event {
+	return &Event{}
 }
 
-func (p *PFS) Pub(args ...interface{}) error {
+func (p *Event) Pub(args ...interface{}) error {
 	p.lmu.Lock()
 	defer p.lmu.Unlock()
 
@@ -48,7 +48,7 @@ func (p *PFS) Pub(args ...interface{}) error {
 	return nil
 }
 
-func (p *PFS) Sub(f interface{}) error {
+func (p *Event) Sub(f interface{}) error {
 	fn, err := p.checkFuncSignature(f)
 	if err != nil {
 		return err
@@ -61,11 +61,11 @@ func (p *PFS) Sub(f interface{}) error {
 	return nil
 }
 
-func (p *PFS) Off() {
+func (p *Event) Off() {
 	panic(fmt.Errorf("Off() has not been implemented yet."))
 }
 
-func (p *PFS) checkFuncSignature(f interface{}) (*reflect.Value, error) {
+func (p *Event) checkFuncSignature(f interface{}) (*reflect.Value, error) {
 	fn := reflect.ValueOf(f)
 	if fn.Kind() != reflect.Func {
 		return nil, fmt.Errorf("Argument should be a function")
@@ -90,7 +90,7 @@ func (p *PFS) checkFuncSignature(f interface{}) (*reflect.Value, error) {
 	return &fn, nil
 }
 
-func (p *PFS) validateArgs(types []reflect.Type) error {
+func (p *Event) validateArgs(types []reflect.Type) error {
 	p.tmu.RLock()
 	defer p.tmu.RUnlock()
 	if len(types) != len(p.argTypes) {

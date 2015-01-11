@@ -1,19 +1,19 @@
-package pfs_test
+package goevent_test
 
 import (
 	"sync"
 	"testing"
 
-	"github.com/pocke/pfs"
+	"github.com/pocke/goevent"
 )
 
-func TestPFSNew(t *testing.T) {
-	p := pfs.New()
-	t.Log("PFS: %+v", p)
+func TestEventNew(t *testing.T) {
+	p := goevent.New()
+	t.Log("Event: %+v", p)
 }
 
 func TestPubSub(t *testing.T) {
-	p := pfs.New()
+	p := goevent.New()
 
 	i := 1
 	err := p.Sub(func(j int) {
@@ -38,7 +38,7 @@ func TestPubSub(t *testing.T) {
 }
 
 func TestManyPub(t *testing.T) {
-	p := pfs.New()
+	p := goevent.New()
 	i := 0
 	p.Sub(func(j int) {
 		i += j
@@ -54,7 +54,7 @@ func TestManyPub(t *testing.T) {
 }
 
 func TestManySub(t *testing.T) {
-	p := pfs.New()
+	p := goevent.New()
 	i := 0
 	m := sync.Mutex{}
 	for j := 0; j < 1000; j++ {
@@ -71,7 +71,7 @@ func TestManySub(t *testing.T) {
 }
 
 func TestSubWhenNotFunction(t *testing.T) {
-	p := pfs.New()
+	p := goevent.New()
 	err := p.Sub("foobar")
 	if err == nil {
 		t.Error("should return error When recieve not function. But got nil.")
@@ -79,7 +79,7 @@ func TestSubWhenNotFunction(t *testing.T) {
 }
 
 func TestSubWhenInvalidArgs(t *testing.T) {
-	p := pfs.New()
+	p := goevent.New()
 	p.Sub(func(i int) {})
 
 	err := p.Sub(func() {})

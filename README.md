@@ -1,9 +1,9 @@
-[![Build Status](https://travis-ci.org/pocke/pfs.svg?branch=master)](https://travis-ci.org/pocke/pfs)
-[![Coverage Status](https://img.shields.io/coveralls/pocke/pfs.svg)](https://coveralls.io/r/pocke/pfs)
-[![GoDoc](https://godoc.org/github.com/pocke/pfs?status.svg)](https://godoc.org/github.com/pocke/pfs)
+[![Build Status](https://travis-ci.org/pocke/goevent.svg?branch=master)](https://travis-ci.org/pocke/goevent)
+[![Coverage Status](https://img.shields.io/coveralls/pocke/goevent.svg)](https://coveralls.io/r/pocke/goevent)
+[![GoDoc](https://godoc.org/github.com/pocke/goevent?status.svg)](https://godoc.org/github.com/pocke/goevent)
 
 
-pfs
+goevent
 ===============
 
 
