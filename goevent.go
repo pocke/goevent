@@ -19,7 +19,7 @@ func New() *Event {
 	return &Event{}
 }
 
-func (p *Event) Pub(args ...interface{}) error {
+func (p *Event) Trigger(args ...interface{}) error {
 	p.lmu.Lock()
 	defer p.lmu.Unlock()
 
@@ -48,7 +48,7 @@ func (p *Event) Pub(args ...interface{}) error {
 	return nil
 }
 
-func (p *Event) Sub(f interface{}) error {
+func (p *Event) On(f interface{}) error {
 	fn, err := p.checkFuncSignature(f)
 	if err != nil {
 		return err
