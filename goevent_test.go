@@ -70,6 +70,20 @@ func TestManyOn(t *testing.T) {
 	}
 }
 
+func TestManyArgs(t *testing.T) {
+	e := goevent.New()
+	var res []int
+	e.On(func(i, j, k int) {
+		res = append(res, i)
+		res = append(res, j)
+		res = append(res, k)
+	})
+	e.Trigger(1, 2, 3)
+	if !(res[0] == 1 && res[1] == 2 && res[2] == 3) {
+		t.Errorf("res expected %v, but got %v", []int{1, 2, 3}, res)
+	}
+}
+
 func TestOnWhenNotFunction(t *testing.T) {
 	p := goevent.New()
 	err := p.On("foobar")
