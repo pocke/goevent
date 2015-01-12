@@ -19,3 +19,5 @@ func (e *EventNotDefined) Error() string {
 func (e *EventNotDefined) EventName() string {
 	return e.eventName
 }
+
+var _ error = newEventNotDefined("foo")
