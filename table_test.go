@@ -50,3 +50,27 @@ func TestTableOff(t *testing.T) {
 		t.Errorf("i expected 1, but got %d", i)
 	}
 }
+
+func TestTableDestroy(t *testing.T) {
+	ta := goevent.NewTable()
+	i := 0
+	ta.On("foo", func(j int) { i += j })
+
+	ta.Trigger("foo", 1)
+	err := ta.Destroy("foo")
+	if err != nil {
+		t.Error(err)
+	}
+	err = ta.Trigger("foo", 1)
+	if err == nil {
+		t.Errorf("should destroy event. but not destroy.")
+	}
+	if i != 1 {
+		t.Errorf("i expected 1, but got %d", i)
+	}
+
+	err = ta.Destroy("foo")
+	if err == nil {
+		t.Errorf("should return error when event has not been defined yet. but got nil")
+	}
+}

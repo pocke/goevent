@@ -9,6 +9,7 @@ type Table interface {
 	On(string, interface{}) error
 	Trigger(string, ...interface{}) error
 	Off(string, interface{})
+	Destroy(string) error
 }
 
 type table struct {
@@ -56,6 +57,14 @@ func (t *table) Off(name string, f interface{}) {
 		return
 	}
 	e.Off(f)
+}
+
+func (t *table) Destroy(name string) error {
+	if _, ok := t.events[name]; !ok {
+		return fmt.Errorf("%s event has not been defined yet.", name)
+	}
+	delete(t.events, name)
+	return nil
 }
 
 var _ Table = &table{}
