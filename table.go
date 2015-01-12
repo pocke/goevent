@@ -1,9 +1,6 @@
 package goevent
 
-import (
-	"fmt"
-	"sync"
-)
+import "sync"
 
 type Table interface {
 	On(string, interface{}) error
@@ -29,7 +26,7 @@ func (t *table) Trigger(name string, args ...interface{}) error {
 
 	ev, ok := t.events[name]
 	if !ok {
-		return fmt.Errorf("%s event has not been defined yet.", name)
+		return newEventNotDefined(name)
 	}
 
 	return ev.Trigger(args...)
@@ -53,7 +50,7 @@ func (t *table) Off(name string, f interface{}) error {
 
 	e, ok := t.events[name]
 	if !ok {
-		return fmt.Errorf("%s event has not been defined yet.", name)
+		return newEventNotDefined(name)
 	}
 
 	return e.Off(f)
@@ -61,7 +58,7 @@ func (t *table) Off(name string, f interface{}) error {
 
 func (t *table) Destroy(name string) error {
 	if _, ok := t.events[name]; !ok {
-		return fmt.Errorf("%s event has not been defined yet.", name)
+		return newEventNotDefined(name)
 	}
 	delete(t.events, name)
 	return nil
