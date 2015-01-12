@@ -8,7 +8,7 @@ import (
 type Table interface {
 	On(string, interface{}) error
 	Trigger(string, ...interface{}) error
-	Off(string, interface{})
+	Off(string, interface{}) error
 	Destroy(string) error
 }
 
@@ -47,16 +47,16 @@ func (t *table) On(name string, f interface{}) error {
 	return ev.On(f)
 }
 
-// XXX: return error?
-func (t *table) Off(name string, f interface{}) {
+func (t *table) Off(name string, f interface{}) error {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
 	e, ok := t.events[name]
 	if !ok {
-		return
+		return fmt.Errorf("%s event has not been defined yet.", name)
 	}
-	e.Off(f)
+
+	return e.Off(f)
 }
 
 func (t *table) Destroy(name string) error {

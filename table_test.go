@@ -44,7 +44,10 @@ func TestTableOff(t *testing.T) {
 	f := func() { i++ }
 	ta.On("foo", f)
 	ta.Trigger("foo")
-	ta.Off("foo", f)
+	err := ta.Off("foo", f)
+	if err != nil {
+		t.Error(err)
+	}
 	ta.Trigger("foo")
 	if i != 1 {
 		t.Errorf("i expected 1, but got %d", i)

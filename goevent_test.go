@@ -115,7 +115,10 @@ func TestOff(t *testing.T) {
 		t.Errorf("k expected 1, but got %d", k)
 	}
 
-	p.Off(f)
+	err := p.Off(f)
+	if err != nil {
+		t.Error(err)
+	}
 	p.Trigger()
 	if i != 1 {
 		t.Errorf("i expected 1, but got %d", i)
@@ -125,5 +128,10 @@ func TestOff(t *testing.T) {
 	}
 	if k != 2 {
 		t.Errorf("k expected 2, but got %d", k)
+	}
+
+	err = p.Off(f)
+	if err == nil {
+		t.Errorf("should return error when Listener doesn't exists. but got nil")
 	}
 }

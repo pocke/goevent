@@ -61,19 +61,26 @@ func (p *Event) On(f interface{}) error {
 	return nil
 }
 
-func (p *Event) Off(f interface{}) {
+func (p *Event) Off(f interface{}) error {
 	fn := reflect.ValueOf(f)
 
 	p.lmu.Lock()
 	defer p.lmu.Unlock()
 	l := len(p.listeners)
+	m := l // for error check
 	for i := 0; i < l; i++ {
 		if fn == p.listeners[i] {
+			// XXX: GC Ref: http://jxck.hatenablog.com/entry/golang-slice-internals
 			p.listeners = append(p.listeners[:i], p.listeners[i+1:]...)
 			l--
 			i--
 		}
 	}
+
+	if l == m {
+		return fmt.Errorf("Listener does't exists")
+	}
+	return nil
 }
 
 func (p *Event) checkFuncSignature(f interface{}) (*reflect.Value, error) {
