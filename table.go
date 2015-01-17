@@ -10,13 +10,13 @@ type Table interface {
 }
 
 type table struct {
-	events map[string]*Event
+	events map[string]Event
 	mu     sync.RWMutex
 }
 
 func NewTable() Table {
 	return &table{
-		events: map[string]*Event{},
+		events: map[string]Event{},
 	}
 }
 

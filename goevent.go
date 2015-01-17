@@ -6,7 +6,13 @@ import (
 	"sync"
 )
 
-type Event struct {
+type Event interface {
+	Trigger(args ...interface{}) error
+	On(f interface{}) error
+	Off(f interface{}) error
+}
+
+type event struct {
 	// listeners are listener functions.
 	listeners []reflect.Value
 	lmu       sync.RWMutex
@@ -15,11 +21,13 @@ type Event struct {
 	tmu      sync.RWMutex
 }
 
-func New() *Event {
-	return &Event{}
+func New() Event {
+	return &event{}
 }
 
-func (p *Event) Trigger(args ...interface{}) error {
+var _ Event = New()
+
+func (p *event) Trigger(args ...interface{}) error {
 	p.lmu.Lock()
 	defer p.lmu.Unlock()
 
@@ -48,7 +56,7 @@ func (p *Event) Trigger(args ...interface{}) error {
 	return nil
 }
 
-func (p *Event) On(f interface{}) error {
+func (p *event) On(f interface{}) error {
 	fn, err := p.checkFuncSignature(f)
 	if err != nil {
 		return err
@@ -61,7 +69,7 @@ func (p *Event) On(f interface{}) error {
 	return nil
 }
 
-func (p *Event) Off(f interface{}) error {
+func (p *event) Off(f interface{}) error {
 	fn := reflect.ValueOf(f)
 
 	p.lmu.Lock()
@@ -83,7 +91,7 @@ func (p *Event) Off(f interface{}) error {
 	return nil
 }
 
-func (p *Event) checkFuncSignature(f interface{}) (*reflect.Value, error) {
+func (p *event) checkFuncSignature(f interface{}) (*reflect.Value, error) {
 	fn := reflect.ValueOf(f)
 	if fn.Kind() != reflect.Func {
 		return nil, fmt.Errorf("Argument should be a function")
@@ -108,7 +116,7 @@ func (p *Event) checkFuncSignature(f interface{}) (*reflect.Value, error) {
 	return &fn, nil
 }
 
-func (p *Event) validateArgs(types []reflect.Type) error {
+func (p *event) validateArgs(types []reflect.Type) error {
 	p.tmu.RLock()
 	defer p.tmu.RUnlock()
 	if len(types) != len(p.argTypes) {
