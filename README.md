@@ -6,6 +6,46 @@
 goevent
 ===============
 
+goevent is event dispatcher written by golang.
+
+
+example
+===========
+
+listen for event
+-----------------
+
+```go
+e := goevent.New()
+e.On(func(i int, s string){
+  fmt.Printf("%d: %s\n", i, s)
+})
+```
+
+Trigger
+----------
+
+```go
+e.Trigger(1, "foo")
+```
+
+
+Use event table
+----------------
+
+```go
+table := goevent.NewTable()
+table.On("foo", func(i int){
+  fmt.Printf("foo: %d\n", i)
+})
+table.On("bar", func(s string){
+  fmt.Printf("bar: %s\n", s)
+})
+
+table.Trigger("foo", 1)
+table.Trigger("bar", "hoge")
+table.Trigger("bar", 38)    // retrun error
+```
 
 
 LICENSE
