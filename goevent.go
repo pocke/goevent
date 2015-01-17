@@ -59,8 +59,6 @@ func New() Event {
 var _ Event = New()
 
 func (p *event) Trigger(args ...interface{}) error {
-	p.lmu.Lock()
-	defer p.lmu.Unlock()
 
 	arguments := make([]reflect.Value, 0, len(args))
 	argTypes := make([]reflect.Type, 0, len(args))
@@ -73,6 +71,9 @@ func (p *event) Trigger(args ...interface{}) error {
 	if err != nil {
 		return err
 	}
+
+	p.lmu.RLock()
+	defer p.lmu.RUnlock()
 
 	wg := sync.WaitGroup{}
 	wg.Add(len(p.listeners))
