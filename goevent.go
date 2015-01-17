@@ -1,3 +1,31 @@
+/*
+Package goevent is event dispatcher.
+
+Listen for event:
+
+    e := goevent.New()
+    e.On(func(i int, s string){
+      fmt.Printf("%d: %s\n", i, s)
+    })
+
+Trigger:
+
+    e.Trigger(1, "foo")
+
+Use event table:
+
+    table := goevent.NewTable()
+    table.On("foo", func(i int){
+      fmt.Printf("foo: %d\n", i)
+    })
+    table.On("bar", func(s string){
+      fmt.Printf("bar: %s\n", s)
+    })
+
+    table.Trigger("foo", 1)
+    table.Trigger("bar", "hoge")
+    table.Trigger("bar", 38)    // retrun error
+*/
 package goevent
 
 import (
@@ -6,8 +34,10 @@ import (
 	"sync"
 )
 
+// Event is an event.
 type Event interface {
 	Trigger(args ...interface{}) error
+	// f is a function
 	On(f interface{}) error
 	Off(f interface{}) error
 }
@@ -21,6 +51,7 @@ type event struct {
 	tmu      sync.RWMutex
 }
 
+// New creates a new event.
 func New() Event {
 	return &event{}
 }
@@ -56,6 +87,7 @@ func (p *event) Trigger(args ...interface{}) error {
 	return nil
 }
 
+// Start to listen an event.
 func (p *event) On(f interface{}) error {
 	fn, err := p.checkFuncSignature(f)
 	if err != nil {
@@ -69,6 +101,7 @@ func (p *event) On(f interface{}) error {
 	return nil
 }
 
+// Stop listening an event.
 func (p *event) Off(f interface{}) error {
 	fn := reflect.ValueOf(f)
 
@@ -91,6 +124,8 @@ func (p *event) Off(f interface{}) error {
 	return nil
 }
 
+// retrun function as reflect.Value
+// retrun error if f isn't function, argument is invalid
 func (p *event) checkFuncSignature(f interface{}) (*reflect.Value, error) {
 	fn := reflect.ValueOf(f)
 	if fn.Kind() != reflect.Func {
@@ -116,6 +151,7 @@ func (p *event) checkFuncSignature(f interface{}) (*reflect.Value, error) {
 	return &fn, nil
 }
 
+// if argument size or type are different return error.
 func (p *event) validateArgs(types []reflect.Type) error {
 	p.tmu.RLock()
 	defer p.tmu.RUnlock()
@@ -131,6 +167,7 @@ func (p *event) validateArgs(types []reflect.Type) error {
 	return nil
 }
 
+// return argument types.
 func fnArgTypes(fn reflect.Value) []reflect.Type {
 	fnType := fn.Type()
 	fnNum := fnType.NumIn()

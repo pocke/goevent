@@ -2,11 +2,14 @@ package goevent
 
 import "sync"
 
+// Table is an event table.
 type Table interface {
-	On(string, interface{}) error
-	Trigger(string, ...interface{}) error
-	Off(string, interface{}) error
-	Destroy(string) error
+	Trigger(name string, args ...interface{}) error
+	// f is a function
+	On(name string, f interface{}) error
+	Off(name string, f interface{}) error
+	// Destroy a event
+	Destroy(name string) error
 }
 
 type table struct {
@@ -14,6 +17,7 @@ type table struct {
 	mu     sync.RWMutex
 }
 
+// NewTable creates a new event table.
 func NewTable() Table {
 	return &table{
 		events: map[string]Event{},
